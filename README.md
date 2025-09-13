@@ -165,29 +165,61 @@ deepresearch "Startup ecosystem in biotech" -o biotech_startups.md \
   --format "investor briefing with key metrics tables"
 ```
 
-### Integration with Claude Code
+## 🤖 Claude Code Sub-Agent Integration
 
-For Claude Code users, you can create a subagent that uses this CLI:
+This repository includes a pre-configured Claude Code sub-agent for seamless integration. The sub-agent enables Claude Code to automatically conduct deep research using this CLI tool.
 
-```markdown
-# Claude Code Subagent Prompt
-You are a research assistant that uses the `deepresearch` CLI to conduct comprehensive research.
+### Quick Setup
 
-IMPORTANT: Deep research takes 5-10 minutes to complete. Always:
-1. Inform user research is starting and will take several minutes
-2. Choose appropriate focus and format based on user needs
-3. Run the CLI command with suitable parameters
-4. Monitor progress and inform user when complete
-5. Read and summarize the results file
+1. **Copy the sub-agent configuration**:
+   ```bash
+   # For user-level installation (recommended)
+   mkdir -p ~/.claude/agents
+   cp deep-research-cli.md ~/.claude/agents/
 
-Usage examples:
-- deepresearch "<query>" -o <path> --focus academic --format "technical analysis"
-- deepresearch "<query>" -o <path> --context "<background>" --focus business
-- deepresearch "<query>" -o <path> --focus news --format "bullet points"
+   # For project-level installation
+   mkdir -p .claude/agents
+   cp deep-research-cli.md .claude/agents/
+   ```
 
-Available focus options: academic, business, news, reports, technical, or custom
-Format can be any description like "executive summary", "comparison table", etc.
+2. **Verify installation**:
+   ```bash
+   # In Claude Code, check available agents
+   /agents
+   ```
+
+3. **The sub-agent will automatically activate** when you ask Claude Code for comprehensive research on complex topics.
+
+### How It Works
+
+The `deep-research-cli` sub-agent:
+- **Activates automatically** when Claude detects research needs
+- **Takes 10 minutes** to complete thorough research
+- **Stores results** in `./deepresearch/` folder
+- **Uses all available CLI parameters** for optimal results
+- **Provides comprehensive analysis** with citations and sources
+
+### Usage Examples
+
+Once installed, simply ask Claude Code questions like:
+
 ```
+"I need comprehensive research on quantum computing developments"
+"Research the environmental impact of lithium battery production"
+"Analyze recent AI regulation changes across different countries"
+```
+
+Claude Code will automatically use the deep-research sub-agent for thorough investigation.
+
+### Manual Sub-Agent Creation
+
+If you want to customize the sub-agent or create similar ones, reference the [Claude Code Sub-Agents Documentation](https://docs.anthropic.com/en/docs/claude-code/sub-agents) and use `deep-research-cli.md` as a template.
+
+Key requirements for Claude Code sub-agents:
+- Must be a Markdown file with YAML frontmatter
+- Requires `name`, `description`, and optionally `tools` fields
+- Store in `~/.claude/agents/` (user-level) or `.claude/agents/` (project-level)
+- Use focused, single-responsibility design
 
 ## 🧪 Development
 
