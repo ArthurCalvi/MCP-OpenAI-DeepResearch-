@@ -3,9 +3,9 @@ requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "mcp-openai-deepresearch"
+name = "deepresearch-cli"
 version = "1.0.0"
-description = "MCP Server for OpenAI DeepResearch integration"
+description = "Command-line interface for OpenAI Deep Research API"
 authors = [
     {name = "Arthur Calvi"}
 ]
@@ -21,9 +21,10 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: Information Analysis",
+    "Topic :: Text Processing :: General",
 ]
 dependencies = [
-    "mcp>=1.2.0",
     "openai>=1.0.0",
     "httpx>=0.24.0",
     "typing-extensions>=4.0.0",
@@ -38,7 +39,7 @@ dev = [
 ]
 
 [project.scripts]
-mcp-deepresearch = "mcp_deepresearch.server:main"
+deepresearch = "deepresearch_cli.cli:main"
 
 [tool.black]
 line-length = 88

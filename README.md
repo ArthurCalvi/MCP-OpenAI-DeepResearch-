@@ -1,293 +1,283 @@
-# MCP OpenAI DeepResearch Server
+# Deep Research CLI
 
-A Model Context Protocol (MCP) server that integrates OpenAI's DeepResearch API, enabling agentic systems like Claude Code and Codex to perform comprehensive research tasks efficiently.
+🔍 **Command-line interface for OpenAI's Deep Research API** - Conduct comprehensive research from your terminal and save results to markdown files.
 
-## Features
+Deep Research CLI leverages OpenAI's powerful Deep Research models (o3-deep-research & o4-mini-deep-research) to perform multi-step research, web searching, and information synthesis, generating comprehensive reports with citations.
 
-- 🔍 **Comprehensive Research**: Leverages OpenAI's DeepResearch models for multi-step research
-- 🌐 **Web Integration**: Automatically searches and synthesizes information from web sources  
-- 📖 **Citation-Rich**: Returns structured reports with proper citations and source links
-- ⚙️ **Flexible Parameters**: Configurable research depth, domain restrictions, and output formats
-- 🛡️ **Error Handling**: Robust error management following MCP best practices
-- 🔄 **Async Support**: Non-blocking operations for better performance
+## 🚀 Quick Start
 
-## Requirements
-
-- Python 3.10 or higher
-- OpenAI API key with access to DeepResearch models
-- Internet connectivity for web research
-
-## Installation
-
-1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/MCP-OpenAI-DeepResearch-.git
-cd MCP-OpenAI-DeepResearch-
+# Install the CLI
+pip install deepresearch-cli
+
+# Set your OpenAI API key
+export OPENAI_API_KEY=your-key-here
+
+# Conduct research
+deepresearch "Latest developments in quantum computing" -o research.md
+
+# Research with specific formatting
+deepresearch "Climate change impacts on agriculture" -o climate.md --format executive-summary
 ```
 
-2. Install dependencies:
+## 📦 Installation
+
+### Via pip (Recommended)
 ```bash
-pip install -r requirements.txt
+pip install deepresearch-cli
 ```
 
-Or install in development mode:
+### From source
 ```bash
-pip install -e ".[dev]"
+git clone https://github.com/yourusername/cli-deepresearch.git
+cd cli-deepresearch
+pip install -e .
 ```
 
-## Configuration
+## 🛠️ Usage
+
+### Basic Usage
+```bash
+deepresearch "Your research question" -o output_file.md
+```
+
+### Advanced Usage
+```bash
+deepresearch "AI safety research 2024" \
+  --output reports/ai_safety.md \
+  --format detailed-report \
+  --model o3-deep-research-2025-06-26
+```
+
+### Available Options
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| `query` | Research question or topic (required) | - |
+| `-o, --output` | Output file path (required) | - |
+| `--model` | OpenAI model to use | `o4-mini-deep-research-2025-06-26` |
+| `--format` | Output format preference (flexible) | None (optimized automatically) |
+| `--context` | Background context for the research query | None |
+| `--focus` | Source focus (academic, business, news, etc.) | None |
+| `--sync` | Use synchronous mode (not recommended) | Background mode |
+| `--no-enhance` | Disable prompt enhancement (faster) | Enhancement enabled |
+| `-v, --verbose` | Enable verbose logging | False |
+
+### Output Formats (Flexible)
+
+Format preferences are now completely **flexible and open-ended**:
+
+- **`"detailed report"`** - Comprehensive report with sections and analysis
+- **`"executive summary"`** - Concise summary with key findings
+- **`"technical analysis"`** - In-depth technical deep-dive
+- **`"bullet points"`** - Structured bullet point format
+- **`"comparison table"`** - Tabular comparison format
+- **`"timeline"`** - Chronological timeline format
+- **Custom formats** - Any format description (e.g., "infographic-style", "Q&A format")
+
+### Source Focus Options
+
+Control which types of sources the research prioritizes:
+
+- **`academic`** - Peer-reviewed research, scholarly papers, academic publications
+- **`business`** - Industry reports, market research, financial data, company reports
+- **`news`** - Recent news articles, press releases, current events coverage
+- **`reports`** - Official reports, government documents, white papers
+- **`technical`** - Technical documentation, specifications, standards
+- **Custom focus** - Any source description (e.g., "startup ecosystem", "regulatory documents")
+
+### Models Available
+
+- **`o4-mini-deep-research-2025-06-26`** - Fast and cost-effective (default)
+- **`o3-deep-research-2025-06-26`** - More comprehensive but slower and more expensive
+
+## ⏱️ Research Process
+
+Deep Research typically takes **5-10 minutes** to complete:
+
+1. **Prompt Enhancement** - Uses GPT-5-mini to optimize your research query (optional)
+2. **Query Processing** - Analyzes and enhances your research question
+3. **Web Research** - Searches multiple sources across the internet
+4. **Source Analysis** - Reads and analyzes relevant documents
+5. **Synthesis** - Combines findings into a comprehensive report
+6. **Citation** - Adds inline citations and source references
+
+### 🔧 Prompt Enhancement
+
+By default, the CLI uses **GPT-5-mini** to enhance your research query before sending it to the Deep Research model. This:
+
+- **Improves research quality** by adding specific instructions for the researcher
+- **Optimizes source selection** based on your focus preferences
+- **Structures output format** according to your requirements
+- **Incorporates context** to provide more relevant results
+
+You can disable this with `--no-enhance` for faster (but less optimized) results.
+
+## 💰 Cost Considerations
+
+- Research requests typically cost **$2-5 per query** (depending on complexity and model)
+- `o4-mini-deep-research` is more cost-effective than `o3-deep-research`
+- No caching is implemented - each query runs fresh research
+
+## 🔧 Configuration
 
 ### Environment Variables
 
-Set the following environment variables:
+| Variable | Description | Required |
+|----------|-------------|----------|
+| `OPENAI_API_KEY` | Your OpenAI API key | ✅ |
+
+### Getting an API Key
+
+1. Sign up at [OpenAI Platform](https://platform.openai.com)
+2. Navigate to API Keys section
+3. Create a new API key
+4. Set the environment variable:
+   ```bash
+   export OPENAI_API_KEY=sk-your-key-here
+   ```
+
+## 📋 Examples
+
+### Research Examples
 
 ```bash
-# Required: Your OpenAI API key
-export OPENAI_API_KEY="sk-your-openai-api-key-here"
+# Basic Research
+deepresearch "Emerging trends in artificial intelligence 2024" -o ai_trends.md
 
-# Optional: Choose DeepResearch model (default: o3-deep-research-2025-06-26)  
-export DEEPRESEARCH_MODEL="o3-deep-research-2025-06-26"
-# Alternative: export DEEPRESEARCH_MODEL="o4-mini-deep-research-2025-06-26"
+# Academic Research with Source Focus
+deepresearch "Recent breakthroughs in cancer immunotherapy" -o cancer_research.md --focus academic --format "technical analysis"
+
+# Business Analysis with Context
+deepresearch "Electric vehicle market opportunities" -o ev_market.md \
+  --context "For venture capital investment decision" \
+  --focus business --format "executive summary"
+
+# News Research
+deepresearch "Latest AI regulation updates" -o ai_regulation.md --focus news
+
+# Technical Documentation Research
+deepresearch "Kubernetes best practices 2024" -o k8s_guide.md --focus technical --format "implementation guide"
+
+# Custom Focus and Format
+deepresearch "Startup ecosystem in biotech" -o biotech_startups.md \
+  --focus "startup databases and industry reports" \
+  --format "investor briefing with key metrics tables"
 ```
 
-### Adding to Claude Code
+### Integration with Claude Code
 
-Claude Code provides several ways to add MCP servers. Choose the method that best fits your workflow:
+For Claude Code users, you can create a subagent that uses this CLI:
 
-#### Method 1: Using Claude Code CLI (Recommended)
+```markdown
+# Claude Code Subagent Prompt
+You are a research assistant that uses the `deepresearch` CLI to conduct comprehensive research.
+
+IMPORTANT: Deep research takes 5-10 minutes to complete. Always:
+1. Inform user research is starting and will take several minutes
+2. Choose appropriate focus and format based on user needs
+3. Run the CLI command with suitable parameters
+4. Monitor progress and inform user when complete
+5. Read and summarize the results file
+
+Usage examples:
+- deepresearch "<query>" -o <path> --focus academic --format "technical analysis"
+- deepresearch "<query>" -o <path> --context "<background>" --focus business
+- deepresearch "<query>" -o <path> --focus news --format "bullet points"
+
+Available focus options: academic, business, news, reports, technical, or custom
+Format can be any description like "executive summary", "comparison table", etc.
+```
+
+## 🧪 Development
+
+### Running from Source
 
 ```bash
-# Add the server with environment variables
-claude mcp add deep-research \
-  --env OPENAI_API_KEY="sk-your-openai-api-key-here" \
-  --env DEEPRESEARCH_MODEL="o3-deep-research-2025-06-26" \
-  -- python -m mcp_deepresearch
+# Clone the repository
+git clone https://github.com/yourusername/cli-deepresearch.git
+cd cli-deepresearch
+
+# Install in development mode
+pip install -e .
+
+# Run directly
+python -m deepresearch_cli "Your research question" -o output.md
+
+# Or use the installed command
+deepresearch "Your research question" -o output.md
 ```
 
-#### Method 2: Project-Scoped Configuration
-
-For project-specific access, use the `--scope project` flag:
+### Testing the CLI
 
 ```bash
-claude mcp add deep-research \
-  --scope project \
-  --env OPENAI_API_KEY="sk-your-openai-api-key-here" \
-  --env DEEPRESEARCH_MODEL="o3-deep-research-2025-06-26" \
-  -- python -m mcp_deepresearch
+# Test basic functionality (requires OPENAI_API_KEY)
+deepresearch "What is Python programming language?" -o test.md --verbose
+
+# Test with focus and format
+deepresearch "Benefits of exercise" -o exercise.md --focus academic --format "bullet points"
+
+# Test with context and custom focus
+deepresearch "Machine learning trends" -o ml.md \
+  --context "For a tech startup CTO" \
+  --focus "industry reports and startup news" \
+  --format "executive summary"
+
+# Test without prompt enhancement (faster)
+deepresearch "Quick overview of blockchain" -o blockchain.md --no-enhance
 ```
 
-#### Method 3: User-Wide Configuration
+## 📄 Output Format
 
-For access across all your projects:
+Research results are saved as markdown files with:
 
-```bash
-claude mcp add deep-research \
-  --scope user \
-  --env OPENAI_API_KEY="sk-your-openai-api-key-here" \
-  --env DEEPRESEARCH_MODEL="o3-deep-research-2025-06-26" \
-  -- python -m mcp_deepresearch
+- **Metadata header** - Query, timestamp, model used
+- **Comprehensive content** - Research findings with structure
+- **Inline citations** - Source links and references
+- **Footer** - Tool attribution
+
+Example output structure:
+```markdown
+# Deep Research Results
+
+**Query:** Your research question
+**Generated:** 2024-01-15 14:30:00
+**Model:** o3-deep-research-2025-06-26
+**Tool:** deepresearch-cli
+
+---
+
+[Research content with inline citations]
+
+---
+
+*Generated using OpenAI Deep Research via deepresearch-cli*
 ```
 
-#### Method 4: Manual Configuration
-
-Alternatively, you can manually configure by editing the appropriate configuration file:
-
-**Local/Project scope** (`.mcp.json` in project root):
-```json
-{
-    "mcpServers": {
-        "deep-research": {
-            "command": "python",
-            "args": ["-m", "mcp_deepresearch"],
-            "env": {
-                "OPENAI_API_KEY": "sk-your-openai-api-key-here",
-                "DEEPRESEARCH_MODEL": "o3-deep-research-2025-06-26"
-            }
-        }
-    }
-}
-```
-
-### Adding to OpenAI Codex
-
-For OpenAI Codex integration, add the server to your `~/.codex/config.toml` file:
-
-```toml
-[mcp_servers.deep-research]
-command = "python"
-args = ["-m", "mcp_deepresearch"]
-env = { 
-    "OPENAI_API_KEY" = "sk-your-openai-api-key-here",
-    "DEEPRESEARCH_MODEL" = "o3-deep-research-2025-06-26"
-}
-```
-
-### Testing Your Configuration
-
-After adding the server, you can test it using the MCP Inspector:
-
-```bash
-# Test with Claude Code
-claude mcp list
-
-# Test with Codex
-npx @modelcontextprotocol/inspector codex mcp
-```
-
-## Usage
-
-Once configured, the MCP server exposes a `deep_research` tool that can be called by compatible AI assistants.
-
-### Tool Parameters
-
-- **query** (required): The detailed research question or topic
-- **context** (optional): Background context about the research query
-- **research_depth** (optional): Research thoroughness level (e.g., "comprehensive", "focused", "surface-level")
-- **domain_restrictions** (optional): Domain limitations (e.g., "academic sources only", "recent news articles")  
-- **output_format** (optional): Preferred output structure (e.g., "detailed report", "executive summary", "bullet points")
-
-### Example Usage in Claude Code
-
-```
-Please use the deep_research tool to investigate the latest developments in quantum computing, 
-focusing on recent breakthrough papers from academic sources, and provide a comprehensive 
-technical analysis.
-```
-
-This would internally call:
-```python
-deep_research(
-    query="latest developments in quantum computing breakthroughs", 
-    context="investigating cutting-edge quantum computing research",
-    research_depth="comprehensive",
-    domain_restrictions="academic sources only", 
-    output_format="technical analysis"
-)
-```
-
-## Available Models
-
-The server supports two OpenAI DeepResearch models:
-
-- **o3-deep-research-2025-06-26**: Optimized for in-depth synthesis and higher-quality output
-- **o4-mini-deep-research-2025-06-26**: Lightweight and faster alternative
-
-## Cost Considerations  
-
-- Research requests typically cost $2-5 per query (depending on complexity and model)
-- No caching is implemented to avoid storage costs
-- Consider setting usage limits in your OpenAI account if needed
-
-## Running the Server
-
-### Direct Execution
-
-```bash
-python -m mcp_deepresearch
-```
-
-### With Custom Configuration
-
-```bash
-OPENAI_API_KEY="your-key" DEEPRESEARCH_MODEL="o4-mini-deep-research-2025-06-26" python -m mcp_deepresearch
-```
-
-### Development Mode
-
-For development and testing:
-
-```bash
-# Install with dev dependencies
-pip install -e ".[dev]"
-
-# Run with debug logging  
-python -c "import logging; logging.basicConfig(level=logging.DEBUG); from mcp_deepresearch.server import main; main()"
-```
-
-## Error Handling
-
-The server handles various error conditions:
-
-- **Authentication Errors**: Invalid or missing OpenAI API key
-- **API Failures**: Network issues, rate limiting, or OpenAI service problems  
-- **Parameter Validation**: Invalid input parameters or malformed requests
-- **Timeout Issues**: Long-running research requests that exceed limits
-
-All errors are properly formatted as MCP errors and logged for debugging.
-
-## Troubleshooting
-
-### Common Issues
-
-1. **"OPENAI_API_KEY environment variable is required"**
-   - Ensure your OpenAI API key is set in the environment or MCP configuration
-
-2. **"DeepResearch API error: 401 Unauthorized"**
-   - Verify your API key is valid and has access to DeepResearch models
-
-3. **"Research request timeout"**
-   - Research can take 5-20 minutes; ensure your client has appropriate timeout settings
-
-4. **"No research content returned"**
-   - Check OpenAI's service status and your account usage limits
-
-### Debug Logging
-
-Enable debug logging to troubleshoot issues:
-
-```python
-import logging
-logging.basicConfig(level=logging.DEBUG)
-```
-
-## Development
-
-### Project Structure
-
-```
-mcp_deepresearch/
-├── __init__.py          # Package initialization
-├── server.py            # Main MCP server implementation
-requirements.txt         # Dependencies
-pyproject.toml          # Project configuration  
-PRD.md                  # Product Requirements Document
-README.md               # This file
-```
-
-### Contributing
+## 🤝 Contributing
 
 1. Fork the repository
-2. Create a feature branch
-3. Make your changes with proper tests
-4. Submit a pull request
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
-### Code Style
+## 📜 License
 
-The project uses:
-- **Black** for code formatting
-- **MyPy** for type checking  
-- **Ruff** for linting
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-Run code quality checks:
-```bash
-black mcp_deepresearch/
-mypy mcp_deepresearch/
-ruff check mcp_deepresearch/
-```
+## 🙋‍♂️ Support
 
-## License
+- **Issues**: [GitHub Issues](https://github.com/yourusername/cli-deepresearch/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/yourusername/cli-deepresearch/discussions)
 
-MIT License - see LICENSE file for details.
+## ⚠️ Important Notes
 
-## Support
+- **API Costs**: Deep Research queries consume OpenAI API credits
+- **Time Requirements**: Each query takes 5-10 minutes to complete
+- **Rate Limits**: Respect OpenAI's rate limits for your account tier
+- **Content Policy**: Follow OpenAI's usage policies for research content
 
-For issues and questions:
-- Check the [troubleshooting section](#troubleshooting)
-- Review OpenAI's [DeepResearch documentation](https://platform.openai.com/docs/guides/deep-research)
-- Open an issue on GitHub
+---
 
-## Acknowledgments
-
-- Built with the [Model Context Protocol](https://modelcontextprotocol.io/)
-- Powered by [OpenAI's DeepResearch](https://openai.com/index/introducing-deep-research/)
-- Uses the official [MCP Python SDK](https://github.com/modelcontextprotocol/python-sdk)
+Built with ❤️ using OpenAI's Deep Research API
