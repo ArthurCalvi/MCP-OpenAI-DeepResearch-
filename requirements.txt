@@ -1,0 +1,13 @@
+# MCP Server for OpenAI DeepResearch - Dependencies
+
+# MCP SDK - Official Python SDK for Model Context Protocol
+mcp>=1.2.0
+
+# OpenAI SDK for DeepResearch API integration  
+openai>=1.0.0
+
+# AsyncIO support for non-blocking operations
+httpx>=0.24.0
+
+# Type checking and development
+typing-extensions>=4.0.0
