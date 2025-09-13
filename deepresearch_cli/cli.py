@@ -123,8 +123,12 @@ GUIDELINES:
         return query
 
 
-def setup_file_logging(output_path: str) -> str:
-    """Setup file logging in the same directory as the output file."""
+def setup_file_logging(output_path: str) -> tuple[str, str]:
+    """Setup file logging in the same directory as the output file.
+
+    Returns:
+        tuple[str, str]: (absolute_log_path, relative_log_path)
+    """
     output_dir = Path(output_path).parent
     output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -144,7 +148,11 @@ def setup_file_logging(output_path: str) -> str:
     # Add file handler to our logger
     logger.addHandler(file_handler)
 
-    return str(log_path)
+    # Return both absolute and relative paths
+    abs_log_path = str(log_path.absolute())
+    rel_log_path = str(log_path.relative_to(Path.cwd()))
+
+    return abs_log_path, rel_log_path
 
 
 async def conduct_research(
@@ -174,19 +182,32 @@ async def conduct_research(
     """
 
     # Setup file logging first
-    log_path = setup_file_logging(output_path)
+    abs_log_path, rel_log_path = setup_file_logging(output_path)
 
     # Create output directory (ensures it exists)
     output_dir = Path(output_path).parent
     output_dir.mkdir(parents=True, exist_ok=True)
 
+    # Calculate relative paths for logging
+    try:
+        rel_output_path = str(Path(output_path).relative_to(Path.cwd()))
+    except ValueError:
+        # If the output path is outside the current working directory
+        rel_output_path = str(Path(output_path).absolute())
+
+    try:
+        rel_output_dir = str(output_dir.relative_to(Path.cwd()))
+    except ValueError:
+        # If the output directory is outside the current working directory
+        rel_output_dir = str(output_dir.absolute())
+
     # Clear, transparent logging about file locations
     logger.info("=" * 60)
     logger.info("🚀 DEEP RESEARCH SESSION STARTED")
     logger.info("=" * 60)
-    logger.info(f"📁 Working directory: {output_dir.absolute()}")
-    logger.info(f"📄 Results will be saved to: {Path(output_path).absolute()}")
-    logger.info(f"📋 Log file will be saved to: {log_path}")
+    logger.info(f"📁 Working directory: {rel_output_dir}")
+    logger.info(f"📄 Results will be saved to: {rel_output_path}")
+    logger.info(f"📋 Log file will be saved to: {rel_log_path}")
     logger.info("=" * 60)
 
     config = DeepResearchConfig()
@@ -288,7 +309,7 @@ async def conduct_research(
         with open(output_path, 'w', encoding='utf-8') as f:
             f.write(_format_results(research_result, query, model, cost_info))
 
-        logger.info(f"💾 Results saved to: {output_path}")
+        logger.info(f"💾 Results saved to: {rel_output_path}")
         logger.info(f"📊 Result length: {len(research_result)} characters")
 
         return research_result
@@ -547,8 +568,15 @@ Focus Options:
             print(f"❌ {result}", file=sys.stderr)
             sys.exit(1)
         else:
+            # Calculate relative path for final output message
+            try:
+                rel_output_path = str(Path(args.output).relative_to(Path.cwd()))
+            except ValueError:
+                # If the output path is outside the current working directory
+                rel_output_path = args.output
+
             print(f"✅ Research completed successfully!")
-            print(f"📄 Results saved to: {args.output}")
+            print(f"📄 Results saved to: {rel_output_path}")
 
     except KeyboardInterrupt:
         print("\n🛑 Research interrupted by user", file=sys.stderr)
