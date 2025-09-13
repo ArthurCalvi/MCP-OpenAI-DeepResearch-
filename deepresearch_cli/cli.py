@@ -123,10 +123,34 @@ GUIDELINES:
         return query
 
 
+def setup_file_logging(output_path: str) -> str:
+    """Setup file logging in the same directory as the output file."""
+    output_dir = Path(output_path).parent
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    # Create log filename based on output filename
+    output_stem = Path(output_path).stem
+    log_filename = f"{output_stem}_deepresearch.log"
+    log_path = output_dir / log_filename
+
+    # Add file handler to the root logger
+    file_handler = logging.FileHandler(log_path, mode='w', encoding='utf-8')
+    file_handler.setLevel(logging.INFO)
+    file_formatter = logging.Formatter(
+        "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    )
+    file_handler.setFormatter(file_formatter)
+
+    # Add file handler to our logger
+    logger.addHandler(file_handler)
+
+    return str(log_path)
+
+
 async def conduct_research(
     query: str,
     output_path: str,
-    model: str = "o4-mini-deep-research-2025-06-26",
+    model: str = "o4-mini-deep-research",
     format_type: Optional[str] = None,
     context: Optional[str] = None,
     focus: Optional[str] = None,
@@ -149,6 +173,22 @@ async def conduct_research(
         The research results as a string
     """
 
+    # Setup file logging first
+    log_path = setup_file_logging(output_path)
+
+    # Create output directory (ensures it exists)
+    output_dir = Path(output_path).parent
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    # Clear, transparent logging about file locations
+    logger.info("=" * 60)
+    logger.info("🚀 DEEP RESEARCH SESSION STARTED")
+    logger.info("=" * 60)
+    logger.info(f"📁 Working directory: {output_dir.absolute()}")
+    logger.info(f"📄 Results will be saved to: {Path(output_path).absolute()}")
+    logger.info(f"📋 Log file will be saved to: {log_path}")
+    logger.info("=" * 60)
+
     config = DeepResearchConfig()
     client = AsyncOpenAI(
         api_key=config.openai_api_key,
@@ -163,7 +203,6 @@ async def conduct_research(
         logger.info(f"📋 Background context provided")
     if focus:
         logger.info(f"🎯 Source focus: {focus}")
-    logger.info(f"💾 Results will be saved to: {output_path}")
 
     if background:
         logger.info("⏱️  Using background mode (research may take 5-10 minutes)")
@@ -192,6 +231,7 @@ async def conduct_research(
             logger.info("⏳ Polling for completion...")
 
             # Poll for completion
+            final_response = None
             while True:
                 try:
                     status_response = await client.responses.retrieve(response.id)
@@ -200,6 +240,7 @@ async def conduct_research(
                         if status_response.status == "completed":
                             logger.info("🎉 Research completed!")
                             research_result = status_response.output_text
+                            final_response = status_response
                             break
                         elif status_response.status == "failed":
                             logger.error("❌ Research failed")
@@ -216,14 +257,36 @@ async def conduct_research(
         else:
             # Synchronous mode
             research_result = response.output_text
+            final_response = response
             logger.info("✅ Research completed!")
 
-        # Save results to file
-        output_dir = Path(output_path).parent
-        output_dir.mkdir(parents=True, exist_ok=True)
+        # Extract usage information and calculate cost
+        cost_info = None
+        usage_data = getattr(final_response, 'usage', None)
+        if usage_data:
+            # Convert usage object to dict if needed
+            if hasattr(usage_data, '__dict__'):
+                usage_dict = usage_data.__dict__
+            else:
+                usage_dict = usage_data
 
+            cost_info = _calculate_cost(usage_dict, model)
+
+            # Log cost information
+            if "error" not in cost_info:
+                logger.info("💰 COST BREAKDOWN:")
+                logger.info(f"📊 Total Tokens: {cost_info['total_tokens']:,}")
+                logger.info(f"📝 Input Tokens: {cost_info['input_tokens']:,} (${cost_info['input_cost']:.4f})")
+                if cost_info['cached_tokens'] > 0:
+                    logger.info(f"⚡ Cached Tokens: {cost_info['cached_tokens']:,} (${cost_info['cached_cost']:.4f})")
+                logger.info(f"📤 Output Tokens: {cost_info['output_tokens']:,} (${cost_info['output_cost']:.4f})")
+                logger.info(f"💵 TOTAL COST: ${cost_info['total_cost']:.4f}")
+            else:
+                logger.warning(f"⚠️  Cost calculation failed: {cost_info.get('error', 'Unknown error')}")
+
+        # Save results to file (directory already created)
         with open(output_path, 'w', encoding='utf-8') as f:
-            f.write(_format_results(research_result, query, model))
+            f.write(_format_results(research_result, query, model, cost_info))
 
         logger.info(f"💾 Results saved to: {output_path}")
         logger.info(f"📊 Result length: {len(research_result)} characters")
@@ -276,17 +339,86 @@ def _build_basic_query(query: str, context: Optional[str], focus: Optional[str],
     return "\n\n".join(parts)
 
 
-def _format_results(content: str, query: str, model: str) -> str:
+def _calculate_cost(usage_data: dict, model: str) -> dict:
+    """Calculate cost based on token usage and model pricing."""
+
+    # 2025 API Pricing (per million tokens)
+    pricing = {
+        "o3-deep-research": {
+            "input": 10.00,
+            "cached_input": 2.50,
+            "output": 40.00
+        },
+        "o4-mini-deep-research": {
+            "input": 2.00,
+            "cached_input": 0.50,
+            "output": 8.00
+        },
+        "gpt-5-mini": {
+            "input": 0.25,
+            "cached_input": 0.025,
+            "output": 2.00
+        }
+    }
+
+    if model not in pricing:
+        return {"error": f"Pricing not available for model: {model}"}
+
+    model_pricing = pricing[model]
+
+    # Extract token counts from usage data
+    input_tokens = usage_data.get("prompt_tokens", 0) or usage_data.get("input_tokens", 0)
+    output_tokens = usage_data.get("completion_tokens", 0) or usage_data.get("output_tokens", 0)
+    cached_tokens = usage_data.get("prompt_tokens_details", {}).get("cached_tokens", 0)
+    total_tokens = usage_data.get("total_tokens", input_tokens + output_tokens)
+
+    # Calculate costs (convert to dollars from per-million pricing)
+    input_cost = (input_tokens - cached_tokens) * model_pricing["input"] / 1_000_000
+    cached_cost = cached_tokens * model_pricing["cached_input"] / 1_000_000 if cached_tokens else 0
+    output_cost = output_tokens * model_pricing["output"] / 1_000_000
+    total_cost = input_cost + cached_cost + output_cost
+
+    return {
+        "input_tokens": input_tokens,
+        "cached_tokens": cached_tokens,
+        "output_tokens": output_tokens,
+        "total_tokens": total_tokens,
+        "input_cost": input_cost,
+        "cached_cost": cached_cost,
+        "output_cost": output_cost,
+        "total_cost": total_cost,
+        "model": model
+    }
+
+
+def _format_results(content: str, query: str, model: str, cost_info: dict = None) -> str:
     """Format the research results with metadata."""
 
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    # Build cost information section
+    cost_section = ""
+    if cost_info and "error" not in cost_info:
+        cost_section = f"""
+
+## Token Usage & Cost
+
+**Input Tokens:** {cost_info['input_tokens']:,}
+**Cached Tokens:** {cost_info['cached_tokens']:,}
+**Output Tokens:** {cost_info['output_tokens']:,}
+**Total Tokens:** {cost_info['total_tokens']:,}
+
+**Input Cost:** ${cost_info['input_cost']:.4f}
+**Cached Cost:** ${cost_info['cached_cost']:.4f}
+**Output Cost:** ${cost_info['output_cost']:.4f}
+**Total Cost:** ${cost_info['total_cost']:.4f}"""
 
     return f"""# Deep Research Results
 
 **Query:** {query}
 **Generated:** {timestamp}
 **Model:** {model}
-**Tool:** deepresearch-cli
+**Tool:** deepresearch-cli{cost_section}
 
 ---
 
@@ -320,8 +452,8 @@ Environment Variables:
   OPENAI_API_KEY    Required: Your OpenAI API key
 
 Models:
-  o4-mini-deep-research-2025-06-26  Fast and cost-effective (default)
-  o3-deep-research-2025-06-26       More comprehensive but slower
+  o4-mini-deep-research  Fast and cost-effective (default)
+  o3-deep-research       More comprehensive but slower
 
 Focus Options:
   academic    Peer-reviewed research and scholarly sources
@@ -346,9 +478,9 @@ Focus Options:
 
     parser.add_argument(
         "--model",
-        default="o4-mini-deep-research-2025-06-26",
-        choices=["o3-deep-research-2025-06-26", "o4-mini-deep-research-2025-06-26"],
-        help="OpenAI model to use (default: o4-mini-deep-research-2025-06-26)"
+        default="o4-mini-deep-research",
+        choices=["o3-deep-research", "o4-mini-deep-research"],
+        help="OpenAI model to use (default: o4-mini-deep-research)"
     )
 
     parser.add_argument(
