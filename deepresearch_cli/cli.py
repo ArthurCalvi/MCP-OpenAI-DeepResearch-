@@ -24,6 +24,13 @@ logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     handlers=[logging.StreamHandler(sys.stderr)]
 )
+
+# Suppress verbose logging from third-party libraries
+logging.getLogger("openai").setLevel(logging.WARNING)
+logging.getLogger("httpx").setLevel(logging.WARNING)
+logging.getLogger("httpcore").setLevel(logging.WARNING)
+logging.getLogger("urllib3").setLevel(logging.WARNING)
+
 logger = logging.getLogger("deepresearch-cli")
 
 
@@ -150,7 +157,13 @@ def setup_file_logging(output_path: str) -> tuple[str, str]:
 
     # Return both absolute and relative paths
     abs_log_path = str(log_path.absolute())
-    rel_log_path = str(log_path.relative_to(Path.cwd()))
+
+    # Calculate relative path safely
+    try:
+        rel_log_path = str(log_path.relative_to(Path.cwd()))
+    except ValueError:
+        # If the log path is outside the current working directory, use absolute path
+        rel_log_path = abs_log_path
 
     return abs_log_path, rel_log_path
 

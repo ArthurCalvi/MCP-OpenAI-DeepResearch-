@@ -115,8 +115,10 @@ You can disable this with `--no-enhance` for faster (but less optimized) results
 
 ## 💰 Cost Considerations
 
-- Research requests typically cost **$2-5 per query** (depending on complexity and model)
-- `o4-mini-deep-research` is more cost-effective than `o3-deep-research`
+- **`o4-mini-deep-research`**: ~**$0.20 per query** (fast and cost-effective)
+- **`o3-deep-research`**: ~**$1.00 per query** (comprehensive but more expensive)
+- Final cost depends on query complexity and research depth
+- The CLI provides detailed cost breakdown after each research session
 - No caching is implemented - each query runs fresh research
 
 ## 🔧 Configuration

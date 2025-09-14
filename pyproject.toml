@@ -41,6 +41,9 @@ dev = [
 [project.scripts]
 deepresearch = "deepresearch_cli.cli:main"
 
+[tool.setuptools.packages.find]
+include = ["deepresearch_cli*"]
+
 [tool.black]
 line-length = 88
 target-version = ['py310']
